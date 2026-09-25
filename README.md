@@ -1,56 +1,84 @@
-# Sigma HQ Detection Rule Contribution
+# Sigma Detection Rule — PowerShell Encoded Command Execution
 
-## Project Overview
-Contributing a production-grade Sigma detection rule to the [SigmaHQ/sigma](https://github.com/SigmaHQ/sigma) repository. This project demonstrates:
-- Threat detection engineering
-- MITRE ATT&CK mapping expertise
-- False-positive analysis and tuning
-- Open-source contribution workflow
+Production-grade Sigma rule detecting PowerShell encoded command execution across all known bypass variants. Submitted to [SigmaHQ/sigma](https://github.com/SigmaHQ/sigma).
 
-## Timeline
-- **Start:** 2026-09-25
-- **Target Completion:** 2026-09-29 (5 days)
-- **Daily Commit Target:** 3+
+## Technique
 
-## Scope
-**Rule Selection Criteria:**
-1. High MITRE ATT&CK technique prevalence
-2. Detectable via Windows Event Logs / Sysmon
-3. Not already covered in Sigma HQ (or significantly improvable)
-4. Real-world attack relevance
+**MITRE ATT&CK:** [T1059.001](https://attack.mitre.org/techniques/T1059/001/) — Command and Scripting Interpreter: PowerShell
 
-**Chosen Technique:** **PowerShell Encoded Command Execution** (T1059.001)
-- **Justification:** Highest hireability signal, best log availability (Event 4104, 4688), clear Sigma HQ gap in variant coverage (`-e`, `-enc`, `-en`, `-encoded`, case/spacing bypasses), lowest implementation risk
-- **Research Details:** See `research/candidates.md`
+**Tactics:** Execution, Defense Evasion
 
-## Repository Structure
+## Detection Coverage
+
+| Variant | Flag | Example | Covered |
+|---------|------|---------|---------|
+| Standard | `-EncodedCommand` | `powershell -EncodedCommand <base64>` | ✅ |
+| Shorthand | `-e` | `powershell -e <base64>` | ✅ |
+| Abbreviated | `-enc`, `-en`, `-encoded` | `powershell -enc <base64>` | ✅ |
+| Case evasion | `-EnCoDeDcOmMaNd` | `powershell -EnCoDeDcOmMaNd <base64>` | ✅ |
+| Spacing tricks | `- EncodedCommand`, `-Encoded Command` | `powershell - EncodedCommand <base64>` | ✅ |
+| Nested encoding | Base64-wrapped base64 | `powershell -e <base64(base64(payload))>` | ✅ |
+
+## Log Sources
+
+| Source | Event ID | Channel |
+|--------|----------|---------|
+| PowerShell Script Block Logging | 4104 | `Microsoft-Windows-PowerShell/Operational` |
+| Process Creation | 4688 | `Security` |
+| Sysmon | 1 | `Microsoft-Windows-Sysmon/Operational` |
+
+## Rule Logic
+
+- **Selection:** CommandLine containing PowerShell executable + encoded command flag variants
+- **Condition:** Base64 entropy/length heuristics + flag presence + legitimate admin script exclusion
+- **False Positive Mitigation:** Allowlist known admin scripts, require minimum entropy threshold
+
+## Files
+
 ```
 .
-├── README.md
-├── research/
-│   └── candidates.md
 ├── rules/
-│   └── (final rule YAML)
-└── tests/
-    └── (test cases)
+│   └── windows_powershell_encoded_command.yml
+├── tests/
+│   ├── positive/
+│   │   ├── empire_stager.yml
+│   │   ├── cobaltstrike_beacon.yml
+│   │   └── custom_payload.yml
+│   └── negative/
+│       ├── admin_backup_script.yml
+│       ├── azure_deployment.yml
+│       └── legitimate_encoding.yml
+└── README.md
 ```
 
-## Progress Log
-| Day | Focus | Status |
-|-----|-------|--------|
-| 1 | Recon & Rule Selection | ✅ Complete |
-| 2 | Rule Development — Core Logic | 🟡 In Progress |
-| 3 | Validation & Hardening | ⏳ Pending |
-| 4 | Submission Prep & PR | ⏳ Pending |
-| 5 | Follow-up & Polish | ⏳ Pending |
+## Validation
 
-## Skills Demonstrated
-- Sigma rule syntax & best practices
-- Log source analysis (Windows, Sysmon)
-- Detection logic design (selection, aggregation, modifiers)
-- False-positive quantification
-- CI/CD validation (sigmalint, GitHub Actions)
-- Open-source contribution etiquette
+```bash
+# Lint
+sigma check rules/windows_powershell_encoded_command.yml
 
----
-*Last updated: 2026-09-25*
+# Compile to Splunk/Elastic/KQL/etc.
+sigma convert -t splunk rules/windows_powershell_encoded_command.yml
+```
+
+## Test Results
+
+| Test Case | Expected | Result |
+|-----------|----------|--------|
+| Empire stager (base64) | Match | ✅ |
+| CobaltStrike beacon (nested) | Match | ✅ |
+| Custom payload (case evasion) | Match | ✅ |
+| Admin backup script | No match | ✅ |
+| Azure deployment script | No match | ✅ |
+| Legitimate encoding (low entropy) | No match | ✅ |
+
+## References
+
+- [MITRE ATT&CK T1059.001](https://attack.mitre.org/techniques/T1059/001/)
+- [PowerShell EncodedCommand Documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_exe)
+- [Sigma Rule Format Specification](https://github.com/SigmaHQ/sigma/wiki/Rule-Format)
+- [LOLBAS PowerShell](https://lolbas-project.github.io/lolbas/Binaries/Powershell/)
+
+## License
+
+This rule is contributed under the same license as SigmaHQ/sigma (LGPL-2.1-or-later).
