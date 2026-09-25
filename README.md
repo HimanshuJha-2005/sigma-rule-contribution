@@ -6,7 +6,7 @@ Production-grade Sigma rule detecting PowerShell encoded command execution acros
 
 **MITRE ATT&CK:** [T1059.001](https://attack.mitre.org/techniques/T1059/001/) — Command and Scripting Interpreter: PowerShell
 
-**Tactics:** Execution, Defense Evasion
+**Tactics:** Execution
 
 ## Detection Coverage
 
