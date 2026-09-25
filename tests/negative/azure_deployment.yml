@@ -1,0 +1,12 @@
+# Azure DevOps Pipeline Deployment Script
+# CI/CD pipeline uses encoded PowerShell for deployment
+logsource:
+  product: windows
+  category: process_creation
+detection:
+  selection:
+    Image|endswith: '\powershell.exe'
+    CommandLine|contains: '-e'
+    CommandLine|contains: 'az deployment'
+    CommandLine|re: '[A-Za-z0-9+/]{30,}={0,2}'
+  condition: selection

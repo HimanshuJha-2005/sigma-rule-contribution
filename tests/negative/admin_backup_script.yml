@@ -1,0 +1,12 @@
+# Legitimate Admin Backup Script
+# IT admin uses encoded command for scheduled backup task
+logsource:
+  product: windows
+  category: process_creation
+detection:
+  selection:
+    Image|endswith: '\powershell.exe'
+    CommandLine|contains: '-EncodedCommand'
+    CommandLine|contains: 'Backup-Script'
+    CommandLine|re: '[A-Za-z0-9+/]{20,}={0,2}'
+  condition: selection

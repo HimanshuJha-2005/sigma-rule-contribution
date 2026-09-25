@@ -1,0 +1,11 @@
+# Cobalt Strike Beacon - Nested Base64 Encoding
+# Beacon payload with double encoding evasion
+logsource:
+  product: windows
+  category: process_creation
+detection:
+  selection:
+    Image|endswith: '\powershell.exe'
+    CommandLine|contains: '-e'
+    CommandLine|re: '[A-Za-z0-9+/]{80,}={0,2}'
+  condition: selection

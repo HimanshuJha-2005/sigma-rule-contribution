@@ -1,0 +1,11 @@
+# Legitimate Low-Entropy Encoding
+# Admin encodes simple one-liner, low entropy base64
+logsource:
+  product: windows
+  category: process_creation
+detection:
+  selection:
+    Image|endswith: '\powershell.exe'
+    CommandLine|contains: '-enc'
+    CommandLine|re: '[A-Za-z0-9+/]{15,25}={0,2}'
+  condition: selection

@@ -1,0 +1,11 @@
+# Custom Payload - Case Evasion & Spacing Tricks
+# Attacker uses -EnCoDeDcOmMaNd with irregular spacing
+logsource:
+  product: windows
+  category: process_creation
+detection:
+  selection:
+    Image|endswith: '\powershell.exe'
+    CommandLine|re: '(?i)-en(co(ded)?(command)?)?\s+'
+    CommandLine|re: '[A-Za-z0-9+/]{40,}={0,2}'
+  condition: selection
