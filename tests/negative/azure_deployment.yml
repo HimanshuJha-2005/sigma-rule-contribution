@@ -1,3 +1,4 @@
+title: Azure DevOps Pipeline Deployment Script
 # Azure DevOps Pipeline Deployment Script
 # CI/CD pipeline uses encoded PowerShell for deployment
 logsource:

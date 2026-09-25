@@ -1,3 +1,4 @@
+title: Cobalt Strike Beacon - Nested Base64 Encoding
 # Cobalt Strike Beacon - Nested Base64 Encoding
 # Beacon payload with double encoding evasion
 logsource:
