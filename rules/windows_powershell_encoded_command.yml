@@ -21,12 +21,18 @@ detection:
   selection_case_evasion:
     CommandLine|re: '(?i)-(encodedcommand|enc(oded?)?|en)\s+'
   selection_base64:
-    CommandLine|re: '[A-Za-z0-9+/]{20,}={0,2}'
-  condition: selection_powershell and (selection_encoded_flags or selection_case_evasion) and selection_base64
+    CommandLine|re: '[A-Za-z0-9+/]{40,}={0,2}'
+  filter_legitimate_admin:
+    CommandLine|contains:
+      - 'Backup-Script'
+      - 'az deployment'
+      - 'Install-Application'
+      - 'Microsoft.ConfigurationManagement'
+  condition: selection_powershell and (selection_encoded_flags or selection_case_evasion) and selection_base64 and not filter_legitimate_admin
 falsepositives:
-  - Legitimate administrative scripts using encoded commands for deployment
-  - Azure/DevOps pipeline scripts
-  - Automated system management tools
+  - Legitimate administrative scripts using encoded commands for deployment (filtered via allowlist)
+  - Azure/DevOps pipeline scripts (filtered via allowlist)
+  - Automated system management tools (filtered via allowlist)
 level: high
 tags:
   - attack.execution
