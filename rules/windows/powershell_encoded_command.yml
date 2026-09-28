@@ -1,0 +1,39 @@
+title: PowerShell Encoded Command Execution
+id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+status: test
+description: Detects PowerShell encoded command execution via all known flag variants (-EncodedCommand, -e, -enc, -en, -encoded) including case evasion and spacing tricks.
+author: Himanshu Jha
+date: 2026-09-25
+logsource:
+  product: windows
+  category: process_creation
+detection:
+  selection_powershell:
+    Image|endswith: '\powershell.exe'
+  selection_encoded_flags:
+    CommandLine|contains|all:
+      - '-EncodedCommand'
+      - '-Encoded Command'
+      - '-Enc'
+      - '-En '
+      - '-Encoded'
+      - '-e '
+  selection_case_evasion:
+    CommandLine|re: '(?i)-(encodedcommand|enc(oded?)?|en)\s+'
+  selection_base64:
+    CommandLine|re: '[A-Za-z0-9+/]{40,}={0,2}'
+  filter_legitimate_admin:
+    CommandLine|contains:
+      - 'Backup-Script'
+      - 'az deployment'
+      - 'Install-Application'
+      - 'Microsoft.ConfigurationManagement'
+  condition: selection_powershell and (selection_encoded_flags or selection_case_evasion) and selection_base64 and not filter_legitimate_admin
+falsepositives:
+  - Legitimate administrative scripts using encoded commands for deployment (filtered via allowlist)
+  - Azure/DevOps pipeline scripts (filtered via allowlist)
+  - Automated system management tools (filtered via allowlist)
+level: high
+tags:
+  - attack.execution
+  - attack.t1059.001
